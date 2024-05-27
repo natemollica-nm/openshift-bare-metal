@@ -264,6 +264,7 @@
           IdentityFile ~/ansible-ssh/id_rsa
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
+      ignore_errors: True
       with_items: "{{ utility_nodes }}"
 
     - name: Remove utility entry in /etc/hosts - provisioning
