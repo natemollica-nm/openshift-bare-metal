@@ -231,6 +231,7 @@
           IdentityFile ~/ansible-ssh/id_rsa
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
+      ignore_errors: True
       with_items: "{{ bastion_nodes }}"
 
     - name: Remote bastion entry in /etc/hosts - provisioning
