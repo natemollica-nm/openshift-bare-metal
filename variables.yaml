@@ -1,6 +1,6 @@
 bridge_prov: prov
 bridge_bm: bm
-libguestfs_path: direct
+libguestfs_path: /usr/share/guestfs/appliance/
 dns_ip_utility: 1.1.1.1
 redfish:
   enable: True
@@ -61,11 +61,11 @@ kvmhost:
   reboot_timeout: 1200
   enable_portfw: True
   replace_ddns_duckdns: False
-  provisioning_bridge_create: False
-  provisioning_bridge_isolated: Flase
+  provisioning_bridge_create: True
+  provisioning_bridge_isolated: False
   baremetal_bridge_create: False
   baremetal_bridge_isolated: False
-  enable_baremetal_gw: False
+  enable_baremetal_gw: True
   set_hostname: False
   set_hosts: True
   additional_hosts: personal_hosts.j2
