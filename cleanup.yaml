@@ -307,5 +307,3 @@
     - name: Revert provisioning network bridge configuration
       shell: |
         /root/kvmhost-provisioning-net-revert.sh &
-      when:
-        - kvmhost.provisioning_bridge_create|bool
