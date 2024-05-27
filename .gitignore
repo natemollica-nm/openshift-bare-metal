@@ -15,3 +15,9 @@ custom-bm-ansible-nodes.json
 *id_rsa
 *id_rsa.pub
 *.iso
+*.DS_Store
+*.idea
+*.secrets
+networking/cisco.xlsx
+*.qcow2
+vault-variables.yaml
