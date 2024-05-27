@@ -1,6 +1,6 @@
 bridge_prov: prov
 bridge_bm: bm
-libguestfs_path: /usr/share/guestfs/appliance/
+libguestfs_path: direct
 dns_ip_utility: 1.1.1.1
 redfish:
   enable: True
@@ -61,25 +61,25 @@ kvmhost:
   reboot_timeout: 1200
   enable_portfw: True
   replace_ddns_duckdns: False
-  provisioning_bridge_create: True
-  provisioning_bridge_isolated: True
-  baremetal_bridge_create: True
-  baremetal_bridge_isolated: True
+  provisioning_bridge_create: False
+  provisioning_bridge_isolated: Flase
+  baremetal_bridge_create: False
+  baremetal_bridge_isolated: False
   enable_baremetal_gw: False
-  set_hostname: True
+  set_hostname: False
   set_hosts: True
   additional_hosts: personal_hosts.j2
   create_ssh_key: True
-cluster_name: ocp-lab
-base_domain: example.com
+cluster_name: openshift-lab
+base_domain: hashicorp-support.io
 domain: "{{ cluster_name }}.{{ base_domain }}"
 enable_ddns_duckdns: False
 enable_letsencrypt: False
 # used on cleanup
 image_dir: /var/lib/libvirt/images
 image_dir_bastion: /var/lib/libvirt/imagesssd
-image: rhel-8.6-x86_64-kvm.qcow2
-image_location: /root/images/rhel-8.6-x86_64-kvm.qcow2
-pull_secret_file: pull-secret.txt
-supported_os: rhel8
-ocpversion: stable-4.11
+image: rhel-9.4-x86_64-kvm.qcow2
+image_location: /root/images/rhel-9.4-x86_64-kvm.qcow2
+pull_secret_file: ./openshift/pull-secret.txt
+supported_os: rhel9
+ocpversion: 4.13.17

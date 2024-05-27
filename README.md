@@ -1,5 +1,9 @@
-ocp4-in-the-jars
+openshift-bare-metal
 =====================
+Credits
+-------
+Reference: https://amedeos.github.io/openshift/2022/08/20/Install-OpenShift-IPI-bm-on-lab.html
+
 Introduction
 ------------
 I use those Ansible playbooks to install **OpenShift Container Platform 4.x** on a couple of (similar) Intel NUC, to test [Installer-provisioned (IPI) clusters on bare metal](https://docs.openshift.com/container-platform/4.11/installing/installing_bare_metal_ipi/ipi-install-overview.html); where instead of using bare metal nodes I use virtual machines on NUC hosts.
@@ -36,6 +40,13 @@ Your Linux NUC hosts require the following **packages** installed and working:
 - virtualbmc or sushy-tools
 - ssh
 
+This lab was tested running [GEEKOM XT12 Pro Mini PCs](https://www.amazon.com/gp/product/B0CS6NXXRS/ref=ppx_yo_dt_b_asin_title_o01_s00?ie=UTF8&th=1) (12th Gen Intel i9-12900H) NUC112 (x2):
+
+- Processor - Core i9-12900H (14 cores, 20 threads, 24MB Cache)
+- Memory - 32GB 3200MHz DDR4 (x2 per NUC PC)
+- Storage - 1TB PCIe4.0 SSD
+- Networking - 2.5GB Ethernet, WiFi 6E
+
 there is no constraint on which Linux distribution to use, for example, I use Gentoo, but you can use RHEL 8, CentOS Stream 8, Ubuntu, Arch... for example to set up a similar project on a Cloud dedicated CentOS Stream 8 server I used this Ansible playbook:
 
 [prepare-hypervisor.yaml](prepare-hypervisor.yaml)
@@ -50,9 +61,9 @@ The Ansible Playbooks, by default, will use only one Linux bridge for OpenShift,
 
 Example configuration for your L2+L3 switch with baremetal network:
 
-| VLAN | Name | Subnet | Native | Bridge | Gateway |
-| ---- | ---- | ------ | ------ | ------ | ------- |
-| 2003 | Baremetal | 192.168.203.0/24 | | bm | 192.168.203.1 |
+| VLAN | Name      | Subnet           | Native | Bridge | Gateway       |
+|------|-----------|------------------|--------|--------|---------------|
+| 2003 | Baremetal | 192.168.203.0/24 |        | bm     | 192.168.203.1 |
 
 #### Provisioning and baremetal networks
 In this case, you'll use both provisioning and baremetal networks using two Linux bridges for OpenShift, which is **prov** for provisioning network (must be native VLAN), and **bm** for baremetal network, this could be a VLAN (in my case VLAN 2003), but you can adapt to your needs. If you want to use both provisioning and baremetal networks, you have to set up **virtualbmc** on each NUC host in order to use ipmi emulator.
@@ -61,10 +72,10 @@ For example, if you have, like me, only one network adapter, and you want to cre
 
 - configure your L2+L3 switch with both VLANs, where the provisioning VLAN is native:
 
-| VLAN | Name | Subnet | Native | Bridge | Gateway |
-| ---- | ---- | ------ | ------ | ------ | ------- |
-| 2001 | Provisioning | 192.168.201.0/24 | True | prov | 192.168.201.1 |
-| 2003 | Baremetal | 192.168.203.0/24 | | bm | 192.168.203.1 |
+| VLAN | Name         | Subnet           | Native | Bridge | Gateway       |
+|------|--------------|------------------|--------|--------|---------------|
+| 2001 | Provisioning | 192.168.201.0/24 | True   | prov   | 192.168.201.1 |
+| 2003 | Baremetal    | 192.168.203.0/24 |        | bm     | 192.168.203.1 |
 
 #### Example bridges configuration
 Below you can find some linux bridges configuration.
@@ -105,18 +116,18 @@ $ nmcli connection modify prov +ipv4.addresses 192.168.201.113/24
 ### vCPU and vRAM
 OpenShift Container Platform requires various Virtual Machines, below the list of Virtual Machines created and their flavor:
 
-| VM | Role | vCPU | vRAM | Disks |
-| :--: | :----: | :----: | :----: | :-----: |
-| utility | - | 2 | 2G | 1x100G |
-| bastion | provisioner | 6 | 16G | 1x100G |
-| master-0 | master | 4 | 16G | 1x150G |
-| master-1 | master | 4 | 16G | 1x150G |
-| master-2 | master | 4 | 16G | 1x150G |
-| worker-0 | worker | 8 | 32G | 1x150G + 1x400G |
-| worker-1 | worker | 8 | 32G | 1x150G + 1x400G |
-| worker-2 (optional) | worker | 8 | 32G | 1x150G + 1x400G |
-| | | | | |
-| | **Total:** | **44** | **162G** | **2.3T** |
+|         VM          |    Role     |  vCPU  |   vRAM   |      Disks      |
+|:-------------------:|:-----------:|:------:|:--------:|:---------------:|
+|       utility       |      -      |   2    |    2G    |     1x100G      |
+|       bastion       | provisioner |   6    |   16G    |     1x100G      |
+|      master-0       |   master    |   4    |   16G    |     1x150G      |
+|      master-1       |   master    |   4    |   16G    |     1x150G      |
+|      master-2       |   master    |   4    |   16G    |     1x150G      |
+|      worker-0       |   worker    |   8    |   32G    | 1x150G + 1x400G |
+|      worker-1       |   worker    |   8    |   32G    | 1x150G + 1x400G |
+| worker-2 (optional) |   worker    |   8    |   32G    | 1x150G + 1x400G |
+|                     |             |        |          |                 |
+|                     | **Total:**  | **44** | **162G** |    **2.3T**     |
 
 The most critical resource is the vRAM, because all hosts, during the installation will be memory consuming; instead all disks will be created in thin provisioning and for this reason a clean deploy will take up to 10-15% provisioned space.
 
@@ -134,17 +145,17 @@ Configurations for your environment
 ### variables.yaml
 Open **variables.yaml** and **vault-variables.yaml** files and edit all variables do you need to fit your requirements, but most importantly, you must change these variables:
 
-| Variable | Description |
-| :------- | :---------: |
-| secure_password | Password used for root and kni user |
-| rh_subcription_user | Your Red Hat Customer Portal username |
-| rh_subcription_password | Your Red Hat Customer Portal password |
-| rh_subcription_pool | Your Red Hat Subscription Pool ID for RHEL |
-| image_location | RHEL 8.6 qcow2 URL/path |
-| ssh_pub | Your ssh public key |
-| ssh_key | Your ssh private key |
-| duckdns_token | Your duckdns.org token for Dynamic DNS |
-| pull-secret.txt | Your pull-secret from cloud.redhat.com |
+| Variable                |                Description                 |
+|:------------------------|:------------------------------------------:|
+| secure_password         |    Password used for root and kni user     |
+| rh_subcription_user     |   Your Red Hat Customer Portal username    |
+| rh_subcription_password |   Your Red Hat Customer Portal password    |
+| rh_subcription_pool     | Your Red Hat Subscription Pool ID for RHEL |
+| image_location          |          RHEL 8.6 qcow2 URL/path           |
+| ssh_pub                 |            Your ssh public key             |
+| ssh_key                 |            Your ssh private key            |
+| duckdns_token           |   Your duckdns.org token for Dynamic DNS   |
+| pull-secret.txt         |   Your pull-secret from cloud.redhat.com   |
 
 ### vm-ansible-nodes.json
 This file maps all VM to your NUC hosts, if you use "localhost", then the Ansible local connection will be used, otherwise Ansible will use ssh connection.
