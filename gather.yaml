@@ -1,0 +1,8 @@
+---
+- name: Gather facts and display the default IPv4 interface
+  hosts: localhost
+  gather_facts: yes
+  tasks:
+    - name: Show the default IPv4 interface (ansible_default_ipv4.interface)
+      debug:
+        msg: "{{ ansible_default_ipv4.interface }}"

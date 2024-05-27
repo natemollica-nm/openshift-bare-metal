@@ -296,14 +296,3 @@
       with_items:
         - "{{ ssh_key }}"
         - "{{ ssh_pub }}"
-
-- name:  Revert network configuration changes
-  hosts: localhost
-  become: True
-  vars_files:
-    - variables.yaml
-    - bm-ansible-nodes.json
-  tasks:
-    - name: Revert provisioning network bridge configuration
-      shell: |
-        /root/kvmhost-provisioning-net-revert.sh &
