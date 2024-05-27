@@ -5,45 +5,45 @@
     - vault-variables.yaml
     - bm-ansible-nodes.json
   tasks:
-  - name: Add bastion group-host for cleanup
-    add_host:
-      name: "{{ item.name }}.{{ domain }}"
-      ansible_ssh_pass: "{{ secure_password }}"
-      ansible_ssh_user: kni
-      ansible_become: True
-      ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q {{ item.hypervisor_user }}@{{ item.hypervisor_name }}"'
-      groups:
-        - bastion
-    with_items:
-      - "{{ bastion_nodes }}"
+    - name: Add bastion group-host for cleanup
+      add_host:
+        name: "{{ item.name }}.{{ domain }}"
+        ansible_ssh_pass: "{{ secure_password }}"
+        ansible_ssh_user: kni
+        ansible_become: True
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q {{ item.hypervisor_user }}@{{ item.hypervisor_name }}"'
+        groups:
+          - bastion
+      with_items:
+        - "{{ bastion_nodes }}"
 
-  - name: Add utility group-host for cleanup
-    add_host:
-      name: "{{ item.name }}.{{ domain }}"
-      ansible_ssh_pass: "{{ secure_password }}"
-      ansible_ssh_user: kni
-      ansible_become: True
-      ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q {{ item.hypervisor_user }}@{{ item.hypervisor_name }}"'
-      groups:
-        - utility
-    with_items:
-      - "{{ utility_nodes }}"
+    - name: Add utility group-host for cleanup
+      add_host:
+        name: "{{ item.name }}.{{ domain }}"
+        ansible_ssh_pass: "{{ secure_password }}"
+        ansible_ssh_user: kni
+        ansible_become: True
+        ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p -q {{ item.hypervisor_user }}@{{ item.hypervisor_name }}"'
+        groups:
+          - utility
+      with_items:
+        - "{{ utility_nodes }}"
 
-  - name: Add all hypervisor group-host
-    add_host:
-      name: "{{ item.hypervisor_name }}"
-      ansible_ssh_user: "{{ item.hypervisor_user }}"
-      ansible_ssh_private_key_file: "{{ item.hypervisor_ssh_key }}"
-      groups:
-        - hypervisor_host
-    with_items:
-      - "{{ bastion_nodes }}"
-      - "{{ utility_nodes }}"
-      - "{{ master_nodes }}"
-      - "{{ worker_nodes }}"
-    when:
-      - item.hypervisor_name != "localhost"
-      - item.state == "present"
+    - name: Add all hypervisor group-host
+      add_host:
+        name: "{{ item.hypervisor_name }}"
+        ansible_ssh_user: "{{ item.hypervisor_user }}"
+        ansible_ssh_private_key_file: "{{ item.hypervisor_ssh_key }}"
+        groups:
+          - hypervisor_host
+      with_items:
+        - "{{ bastion_nodes }}"
+        - "{{ utility_nodes }}"
+        - "{{ master_nodes }}"
+        - "{{ worker_nodes }}"
+      when:
+        - item.hypervisor_name != "localhost"
+        - item.state == "present"
 
 - name: Clean bastion and utility
   hosts:
@@ -57,10 +57,10 @@
   ignore_unreachable: True
   gather_facts: False
   tasks:
-  - name: Unregister host
-    redhat_subscription:
-      state: absent
-    ignore_errors: True
+    - name: Unregister host
+      redhat_subscription:
+        state: absent
+      ignore_errors: True
 
 - name: Cleanup
   hosts:
@@ -71,228 +71,241 @@
     - vault-variables.yaml
     - bm-ansible-nodes.json
   tasks:
-  - name: Destroy virsh domain
-    virt:
-      name: "{{ item.name }}"
-      state: destroyed
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.state == "present"
-    with_items:
-      - "{{ bastion_nodes }}"
-      - "{{ utility_nodes }}"
-      - "{{ master_nodes }}"
-      - "{{ worker_nodes }}"
-    ignore_errors: True
+    - name: Destroy virsh domain
+      virt:
+        name: "{{ item.name }}"
+        state: destroyed
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.state == "present"
+      with_items:
+        - "{{ bastion_nodes }}"
+        - "{{ utility_nodes }}"
+        - "{{ master_nodes }}"
+        - "{{ worker_nodes }}"
+      ignore_errors: True
 
-  - name: Undefine virsh domain
-    virt:
-      name: "{{ item.name }}"
-      command: undefine
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.state == "present"
-    with_items:
-      - "{{ bastion_nodes }}"
-      - "{{ utility_nodes }}"
-      - "{{ master_nodes }}"
-      - "{{ worker_nodes }}"
-    ignore_errors: True
- 
-  - name: Remove files
-    file:
-      path: "{{ item }}"
-      state: absent
-    with_items:
-      - /tmp/ifcfg-eth0
-      - ansible-ssh
+    - name: Undefine virsh domain
+      virt:
+        name: "{{ item.name }}"
+        command: undefine
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.state == "present"
+      with_items:
+        - "{{ bastion_nodes }}"
+        - "{{ utility_nodes }}"
+        - "{{ master_nodes }}"
+        - "{{ worker_nodes }}"
+      ignore_errors: True
 
-  - name: Remove qcow2 files
-    file:
-      path: "{{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2"
-      state: absent
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.state == "present"
-    with_items:
-      - "{{ bastion_nodes }}"
-      - "{{ utility_nodes }}"
-      - "{{ master_nodes }}"
-      - "{{ worker_nodes }}"
-    ignore_errors: True
+    - name: Remove files
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - /tmp/ifcfg-eth0
+        - ansible-ssh
 
-  - name: Remove qcow2 files
-    file:
-      path: "{{ image_dir }}/{{ item }}"
-      state: absent
-    with_items:
-      - rhel8.qcow2
-      - rhel8-100G.qcow2
-      - rhel8-100G-no-eth0.qcow2
-      - rhel8-bastion.qcow2
-      - rhel8-utility.qcow2
-      - bastion.qcow2
-      - utility.qcow2
-      - "{{ image }}"
+    - name: Remove qcow2 files
+      file:
+        path: "{{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2"
+        state: absent
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.state == "present"
+      with_items:
+        - "{{ bastion_nodes }}"
+        - "{{ utility_nodes }}"
+        - "{{ master_nodes }}"
+        - "{{ worker_nodes }}"
+      ignore_errors: True
 
-  - name: Remove qcow2 files
-    file:
-      path: "{{ image_dir_bastion }}/{{ item }}"
-      state: absent
-    with_items:
-      - rhel8.qcow2
-      - rhel8-100G.qcow2
-      - rhel8-100G-no-eth0.qcow2
-      - rhel8-bastion.qcow2
-      - rhel8-utility.qcow2
-      - bastion.qcow2
-      - utility.qcow2
-      - "{{ image }}"
+    - name: Remove qcow2 files
+      file:
+        path: "{{ image_dir }}/{{ item }}"
+        state: absent
+      with_items:
+        - rhel9.qcow2
+        - rhel9-100G.qcow2
+        - rhel9-100G-no-eth0.qcow2
+        - rhel9-bastion.qcow2
+        - rhel9-utility.qcow2
+        - bastion.qcow2
+        - utility.qcow2
+        - "{{ image }}"
 
-  - name: Remove odf osd-1 qcow2 files
-    file:
-      path: "{{ item.hypervisor_image_dir }}/{{ item.name }}-osd-1.qcow2"
-      state: absent
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.state == "present"
-    with_items:
-      - "{{ worker_nodes }}"
-    ignore_errors: True
+    - name: Remove qcow2 files
+      file:
+        path: "{{ image_dir_bastion }}/{{ item }}"
+        state: absent
+      with_items:
+        - rhel9.qcow2
+        - rhel9-100G.qcow2
+        - rhel9-100G-no-eth0.qcow2
+        - rhel9-bastion.qcow2
+        - rhel9-utility.qcow2
+        - bastion.qcow2
+        - utility.qcow2
+        - "{{ image }}"
 
-  - name: Remove odf osd-2 qcow2 files
-    file:
-      path: "{{ item.hypervisor_image_dir }}/{{ item.name }}-osd-2.qcow2"
-      state: absent
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.state == "present"
-    with_items:
-      - "{{ worker_nodes }}"
-    ignore_errors: True
+    - name: Remove odf osd-1 qcow2 files
+      file:
+        path: "{{ item.hypervisor_image_dir }}/{{ item.name }}-osd-1.qcow2"
+        state: absent
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.state == "present"
+      with_items:
+        - "{{ worker_nodes }}"
+      ignore_errors: True
 
-  - name: Remove ssh known hosts - bastion
-    known_hosts:
-      name: "{{ item.1 }}"
-      path: "{{ item.0 }}"
-      state: absent
-    with_nested:
-      - [ '/root/.ssh/known_hosts']
-      - [ 'bastion', 'bastion.{{ domain }}' ]
+    - name: Remove odf osd-2 qcow2 files
+      file:
+        path: "{{ item.hypervisor_image_dir }}/{{ item.name }}-osd-2.qcow2"
+        state: absent
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.state == "present"
+      with_items:
+        - "{{ worker_nodes }}"
+      ignore_errors: True
 
-  - name: Remove ssh known hosts - utility
-    known_hosts:
-      name: "{{ item.1 }}"
-      path: "{{ item.0 }}"
-      state: absent
-    with_nested:
-      - [ '/root/.ssh/known_hosts']
-      - [ 'utility', 'utility.{{ domain }}' ]
+    - name: Remove ssh known hosts - bastion
+      known_hosts:
+        name: "{{ item.1 }}"
+        path: "{{ item.0 }}"
+        state: absent
+      with_nested:
+        - [ '/root/.ssh/known_hosts']
+        - [ 'bastion', 'bastion.{{ domain }}' ]
 
-  - name: Remove files and directories
-    file:
-      path: "{{ item }}"
-      state: absent
-    with_items:
-      - "hosts-bastion"
-      - "hosts-bastion-kni"
-      - "hosts-bastion-root"
-      - "hosts-utility"
-      - "hosts-utility-kni"
-      - "hosts-utility-root"
+    - name: Remove ssh known hosts - utility
+      known_hosts:
+        name: "{{ item.1 }}"
+        path: "{{ item.0 }}"
+        state: absent
+      with_nested:
+        - [ '/root/.ssh/known_hosts']
+        - [ 'utility', 'utility.{{ domain }}' ]
 
-  - name: Delete virtualbmc interface
-    shell: |
-      vbmc delete "{{ item.name }}"
-    ignore_errors: True
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.state == "present"
-    with_items:
-      - "{{ bastion_nodes }}"
-      - "{{ utility_nodes }}"
-      - "{{ master_nodes }}"
-      - "{{ worker_nodes }}"
-    when:
-      - not redfish.enable|bool
+    - name: Remove files and directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      with_items:
+        - "hosts-bastion"
+        - "hosts-bastion-kni"
+        - "hosts-bastion-root"
+        - "hosts-utility"
+        - "hosts-utility-kni"
+        - "hosts-utility-root"
 
-  - name: Remove bastion from ssh/config file
-    blockinfile:
-      path: ~/.ssh/config
-      backup: True
-      state: absent
-      block: |
-        Host {{ item.name }}.{{ domain }}
-        IdentityFile ~/ansible-ssh/id_rsa
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    with_items: "{{ bastion_nodes }}"
+    - name: Delete virtualbmc interface
+      shell: |
+        vbmc delete "{{ item.name }}"
+      ignore_errors: True
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.state == "present"
+      with_items:
+        - "{{ bastion_nodes }}"
+        - "{{ utility_nodes }}"
+        - "{{ master_nodes }}"
+        - "{{ worker_nodes }}"
+      when:
+        - not redfish.enable|bool
 
-  - name: Remote bastion entry in /etc/hosts - provisioning
-    lineinfile:
-      path: /etc/hosts
-      backup: True
-      regexp: "{{ item.provisioning_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
-      state: absent
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    with_items: "{{ bastion_nodes }}"
+    - name: Remove bastion from ssh/config file
+      blockinfile:
+        path: ~/.ssh/config
+        backup: True
+        state: absent
+        block: |
+          Host {{ item.name }}.{{ domain }}
+          IdentityFile ~/ansible-ssh/id_rsa
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      with_items: "{{ bastion_nodes }}"
 
-  - name: Remote bastion entry in /etc/hosts - baremetal
-    lineinfile:
-      path: /etc/hosts
-      backup: True
-      regexp: "{{ item.baremetal_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
-      state: absent
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    with_items: "{{ bastion_nodes }}"
+    - name: Remote bastion entry in /etc/hosts - provisioning
+      lineinfile:
+        path: /etc/hosts
+        backup: True
+        regexp: "{{ item.provisioning_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
+        state: absent
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      with_items: "{{ bastion_nodes }}"
 
-  - name: Remove utility from ssh/config file
-    blockinfile:
-      path: ~/.ssh/config
-      backup: True
-      state: absent
-      block: |
-        Host {{ item.name }}.{{ domain }}
-        IdentityFile ~/ansible-ssh/id_rsa
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    with_items: "{{ utility_nodes }}"
+    - name: Remote bastion entry in /etc/hosts - baremetal
+      lineinfile:
+        path: /etc/hosts
+        backup: True
+        regexp: "{{ item.baremetal_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
+        state: absent
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      with_items: "{{ bastion_nodes }}"
 
-  - name: Remove utility entry in /etc/hosts - provisioning
-    lineinfile:
-      path: /etc/hosts
-      backup: True
-      regexp: "{{ item.provisioning_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
-      state: absent
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    with_items: "{{ utility_nodes }}"
+    - name: Remove utility from ssh/config file
+      blockinfile:
+        path: ~/.ssh/config
+        backup: True
+        state: absent
+        block: |
+          Host {{ item.name }}.{{ domain }}
+          IdentityFile ~/ansible-ssh/id_rsa
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      with_items: "{{ utility_nodes }}"
 
-  - name: Remove utility entry in /etc/hosts - baremetal
-    lineinfile:
-      path: /etc/hosts
-      backup: True
-      regexp: "{{ item.baremetal_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
-      state: absent
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    with_items: "{{ utility_nodes }}"
+    - name: Remove utility entry in /etc/hosts - provisioning
+      lineinfile:
+        path: /etc/hosts
+        backup: True
+        regexp: "{{ item.provisioning_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
+        state: absent
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      with_items: "{{ utility_nodes }}"
 
-  - name: Remove SSH key
-    file:
-      path: "{{ item }}"
-      state: absent
-    when:
-      - delete_ssh_key_on_cleanup|bool
-    with_items:
-      - "{{ ssh_key }}"
-      - "{{ ssh_pub }}"
+    - name: Remove utility entry in /etc/hosts - baremetal
+      lineinfile:
+        path: /etc/hosts
+        backup: True
+        regexp: "{{ item.baremetal_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
+        state: absent
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      with_items: "{{ utility_nodes }}"
 
+    - name: Remove SSH key
+      file:
+        path: "{{ item }}"
+        state: absent
+      when:
+        - delete_ssh_key_on_cleanup|bool
+      with_items:
+        - "{{ ssh_key }}"
+        - "{{ ssh_pub }}"
+
+- name:  Prepare Hypervisor
+  hosts: kvmhost
+  become: True
+  vars_files:
+    - variables.yaml
+    - bm-ansible-nodes.json
+  tasks:
+    - name: Revert provisioning network bridge configuration
+      shell: |
+        /root/kvmhost-provisioning-net-revert.sh &
+      when:
+        - kvmhost.provisioning_bridge_create|bool
+        - not kvmhost.provisioning_bridge_isolated|bool

@@ -14,8 +14,8 @@ build_bare_metal_bridge() {
   fi
 
   # Configure local subnet info
-  #  sudo nmcli connection modify enp87s0 ipv4.addresses "${local_lan_ip}"/24 ipv4.gateway 192.168.0.1 ipv4.method manual
-  #  sudo nmcli connection up enp87s0
+  sudo nmcli connection modify enp87s0 ipv4.addresses "${local_lan_ip}"/24 ipv4.gateway 192.168.0.1 ipv4.method manual
+  sudo nmcli connection up enp87s0
 
   print_msg "bare-metal-bridge: Creating 'baremetal' (VLAN interface) and 'bm' (bridge interface):" \
     "Host: $HOSTNAME" \
