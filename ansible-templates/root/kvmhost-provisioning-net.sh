@@ -11,11 +11,11 @@ else
 fi
 
 # delete all active connection
-for n in $(nmcli --get-values UUID connection show --active); do
-    nmcli connection show ${n} | tee /root/backup-connection-${n}
-    nmcli connection down ${n}
-    nmcli connection delete ${n}
-done
+#for n in $(nmcli --get-values UUID connection show --active); do
+#    nmcli connection show ${n} | tee /root/backup-connection-${n}
+#    nmcli connection down ${n}
+#    nmcli connection delete ${n}
+#done
 
 # create provisioning bridge {{ bridge_prov }}
 nmcli connection add ifname {{ bridge_prov }} type bridge con-name {{ bridge_prov }}
