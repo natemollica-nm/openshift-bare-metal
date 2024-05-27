@@ -66,7 +66,7 @@ kvmhost:
   baremetal_bridge_create: False
   baremetal_bridge_isolated: False
   enable_baremetal_gw: True
-  set_hostname: False
+  set_hostname: True
   set_hosts: True
   additional_hosts: personal_hosts.j2
   create_ssh_key: True
