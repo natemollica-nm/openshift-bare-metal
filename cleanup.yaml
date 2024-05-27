@@ -296,9 +296,7 @@
         - "{{ ssh_pub }}"
 
 - name:  Revert network configuration changes
-  hosts:
-    - localhost
-    - hypervisor_host
+  hosts: localhost
   become: True
   vars_files:
     - variables.yaml
