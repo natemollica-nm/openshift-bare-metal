@@ -214,13 +214,12 @@
       run_once: True
       when:
         - item.state == "present"
+        - not redfish.enable|bool
       with_items:
         - "{{ bastion_nodes }}"
         - "{{ utility_nodes }}"
         - "{{ master_nodes }}"
         - "{{ worker_nodes }}"
-      when:
-        - not redfish.enable|bool
 
     - name: Remove bastion from ssh/config file
       blockinfile:
@@ -296,8 +295,10 @@
         - "{{ ssh_key }}"
         - "{{ ssh_pub }}"
 
-- name:  Prepare Hypervisor
-  hosts: kvmhost
+- name:  Revert network configuration changes
+  hosts:
+    - localhost
+    - hypervisor_host
   become: True
   vars_files:
     - variables.yaml
@@ -308,4 +309,3 @@
         /root/kvmhost-provisioning-net-revert.sh &
       when:
         - kvmhost.provisioning_bridge_create|bool
-        - not kvmhost.provisioning_bridge_isolated|bool
