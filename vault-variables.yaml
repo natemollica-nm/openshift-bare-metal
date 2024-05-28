@@ -2,11 +2,11 @@ ssh_pub: files/.ssh/id_rsa.pub
 ssh_key: files/.ssh/id_rsa
 delete_ssh_key_on_cleanup: True
 ### password used when one is sequired, for example ssh password
-secure_password: qwe123QWE!@#qwe123
+secure_password: <your_secure_pw>
 ### your red hat customer portal username and password
 rh_subcription_user: natemollica
-rh_subcription_password: abt!UFA8vnw6fyt3qmp
+rh_subcription_password: <your_rh_subscription_pw>
 ### red hat subscription pool id for rhel
-rh_subcription_pool: 14153839
+rh_subcription_pool: <your_rh_subscription_pool>
 ### if you use duckdns put here your token
-duckdns_token: nah_im_good_on_this
+duckdns_token: <duckdns_token>
