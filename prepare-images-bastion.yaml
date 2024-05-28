@@ -47,6 +47,8 @@
         group: root
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
+      when:
+        - image_get_url.failed is defined
       with_items: "{{ bastion_nodes }}"
 
     - name: Create a new Blank Image
