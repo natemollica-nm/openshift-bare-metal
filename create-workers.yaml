@@ -5,15 +5,15 @@
     - vault-variables.yaml
     - bm-ansible-nodes.json
   tasks:
-  - name: Add all hypervisor group-host
-    add_host:
-      name: "{{ item.hypervisor_name }}"
-      ansible_ssh_user: "{{ item.hypervisor_user }}"
-      ansible_ssh_private_key_file: "{{ item.hypervisor_ssh_key }}"
-      groups:
-        - hypervisor_host
-    with_items: "{{ worker_nodes }}"
-    when: item.hypervisor_name != "localhost"
+    - name: Add all hypervisor group-host
+      add_host:
+        name: "{{ item.hypervisor_name }}"
+        ansible_ssh_user: "{{ item.hypervisor_user }}"
+        ansible_ssh_private_key_file: "{{ item.hypervisor_ssh_key }}"
+        groups:
+          - hypervisor_host
+      with_items: "{{ worker_nodes }}"
+      when: item.hypervisor_name != "localhost"
 
 - name:  Build worker hosts
   hosts:
@@ -24,82 +24,88 @@
     - vault-variables.yaml
     - bm-ansible-nodes.json
   tasks:
-  - name: Create Image for each worker
-    shell: |
-      qemu-img create -f qcow2 -o preallocation=metadata {{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2 {{ worker.disk }}
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.state == "present"
-    with_items: "{{ worker_nodes }}"
+    - name: Create Image for each worker
+      shell: |
+        qemu-img create -f qcow2 -o preallocation=metadata {{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2 {{ worker.disk }}
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.state == "present"
+      with_items: "{{ worker_nodes }}"
 
-  - name: Create one OSD disk
-    shell: |
-      qemu-img create -f qcow2 -o preallocation=metadata {{ item.hypervisor_image_dir }}/{{ item.name }}-osd-1.qcow2 {{ worker.osd_disk }}
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.is_odf == "true"
-      - item.state == "present"
-    with_items: "{{ worker_nodes }}"
+    - name: Create one OSD disk
+      shell: |
+        qemu-img create -f qcow2 -o preallocation=metadata {{ item.hypervisor_image_dir }}/{{ item.name }}-osd-1.qcow2 {{ worker.osd_disk }}
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.is_odf == "true"
+        - item.state == "present"
+      with_items: "{{ worker_nodes }}"
 
-  - name: Defining worker VMs - virtualbmc
-    shell: |
-      virt-install --ram {{ worker.memory }} --vcpus {{ worker.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_prov }},mac={{ item.provisioning_mac }} --network bridge:{{ bridge_bm }},mac={{ item.baremetal_mac }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
-      virsh define /tmp/{{ item.name }}.xml
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - not item.is_odf == "true"
-      - item.state == "present"
-      - not redfish.enable|bool
-    with_items: "{{ worker_nodes }}"
+    - name: Defining worker VMs - virtualbmc
+      shell: |
+        virt-install --ram {{ worker.memory }} --vcpus {{ worker.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_prov }},mac={{ item.provisioning_mac }} --network bridge:{{ bridge_bm }},mac={{ item.baremetal_mac }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
+        virsh define /tmp/{{ item.name }}.xml
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - not item.is_odf == "true"
+        - item.state == "present"
+        - not redfish.enable|bool
+      with_items: "{{ worker_nodes }}"
 
-  - name: Defining worker VMs - redfish
-    shell: |
-      virt-install --ram {{ worker.memory }} --vcpus {{ worker.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_bm }},mac={{ item.baremetal_mac }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
-      virsh define /tmp/{{ item.name }}.xml
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - not item.is_odf == "true"
-      - item.state == "present"
-      - redfish.enable|bool
-    with_items: "{{ worker_nodes }}"
-  
-  - name: Defining ODF worker VMs - virtualbmc
-    shell: |
-      virt-install --ram {{ worker.memory }} --vcpus {{ worker.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2,device=disk,bus=virtio,format=qcow2 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}-osd-1.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_prov }},mac={{ item.provisioning_mac }} --network bridge:{{ bridge_bm }},mac={{ item.baremetal_mac }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
-      virsh define /tmp/{{ item.name }}.xml
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.is_odf == "true"
-      - item.state == "present"
-      - not redfish.enable|bool
-    with_items: "{{ worker_nodes }}"
+    - name: Defining worker VMs - redfish
+      shell: |
+        virt-install --ram {{ worker.memory }} --vcpus {{ worker.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_bm }},mac={{ item.baremetal_mac }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
+        virsh define /tmp/{{ item.name }}.xml
+      environment:
+        LIBGUESTFS_BACKEND: "direct"
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - not item.is_odf == "true"
+        - item.state == "present"
+        - redfish.enable|bool
+      with_items: "{{ worker_nodes }}"
 
-  - name: Defining ODF worker VMs - redfish
-    shell: |
-      virt-install --ram {{ worker.memory }} --vcpus {{ worker.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2,device=disk,bus=virtio,format=qcow2 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}-osd-1.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_bm }},mac={{ item.baremetal_mac }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
-      virsh define /tmp/{{ item.name }}.xml
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.is_odf == "true"
-      - item.state == "present"
-      - redfish.enable|bool
-    with_items: "{{ worker_nodes }}"
+    - name: Defining ODF worker VMs - virtualbmc
+      shell: |
+        virt-install --ram {{ worker.memory }} --vcpus {{ worker.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2,device=disk,bus=virtio,format=qcow2 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}-osd-1.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_prov }},mac={{ item.provisioning_mac }} --network bridge:{{ bridge_bm }},mac={{ item.baremetal_mac }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
+        virsh define /tmp/{{ item.name }}.xml
+      environment:
+        LIBGUESTFS_BACKEND: "direct"
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.is_odf == "true"
+        - item.state == "present"
+        - not redfish.enable|bool
+      with_items: "{{ worker_nodes }}"
 
-  # TODO: check ip address available in the hypervisor
-  - name: Create virtualbmc interface
-    shell: |
-      vbmc add "{{ item.name }}" --address "{{ item.vbmc_ip }}" --port "{{ item.vbmc_port }}" --username admin --password "{{ secure_password }}"
-      vbmc start "{{ item.name }}"
-    delegate_to: "{{ item.hypervisor_name }}"
-    run_once: True
-    when:
-      - item.state == "present"
-      - not redfish.enable|bool
-    with_items: "{{ worker_nodes }}"
+    - name: Defining ODF worker VMs - redfish
+      shell: |
+        virt-install --ram {{ worker.memory }} --vcpus {{ worker.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}.qcow2,device=disk,bus=virtio,format=qcow2 --disk path={{ item.hypervisor_image_dir }}/{{ item.name }}-osd-1.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_bm }},mac={{ item.baremetal_mac }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
+        virsh define /tmp/{{ item.name }}.xml
+      environment:
+        LIBGUESTFS_BACKEND: "direct"
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.is_odf == "true"
+        - item.state == "present"
+        - redfish.enable|bool
+      with_items: "{{ worker_nodes }}"
+
+    # TODO: check ip address available in the hypervisor
+    - name: Create virtualbmc interface
+      shell: |
+        vbmc add "{{ item.name }}" --address "{{ item.vbmc_ip }}" --port "{{ item.vbmc_port }}" --username admin --password "{{ secure_password }}"
+        vbmc start "{{ item.name }}"
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      when:
+        - item.state == "present"
+        - not redfish.enable|bool
+      with_items: "{{ worker_nodes }}"
 

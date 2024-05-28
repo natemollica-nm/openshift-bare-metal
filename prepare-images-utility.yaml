@@ -88,29 +88,35 @@
       run_once: True
       with_items: "{{ utility_nodes }}"
   
-    - name: Create /tmp/ifcfg-eth0 for RHEL9 - redfish
+    - name: Create /tmp/{{ ansible_default_ipv4.interface }} for RHEL9 - redfish
       copy:
-        dest: /tmp/ifcfg-eth0
+        dest: /tmp/{{ ansible_default_ipv4.interface }}.nmconnection
         mode: '0644'
         content: |
-          DEVICE=eth0
-          TYPE=Ethernet
-          IPADDR={{ utility_nodes[0].baremetal_ip }}
-          GATEWAY={{ baremetal_net.gateway }}
-          NETMASK={{ baremetal_net.netmask }}
-          MTU={{ baremetal_net.mtu }}
-          ONBOOT=yes
-          NM_CONTROLLED=yes
-          DNS1={{ dns_ip_utility }}
+          [connection]
+          id={{ ansible_default_ipv4.interface }}
+          uuid={{ uuid }}
+          type=ethernet
+          autoconnect=true
+
+          [ipv4]
+          method=manual
+          addresses={{ utility_nodes[0].baremetal_ip }}/{{ baremetal_net.prefix }}
+          gateway={{ baremetal_net.gateway }}
+          dns={{ utility_nodes[0].baremetal_ip }}
+          dns-search=
+
+          [ipv6]
+          method=ignore
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
       with_items: "{{ utility_nodes }}"
       when:
         - redfish.enable|bool
-  
-    - name: Copying Config files to the rhel9 utility image - redfish
+
+    - name: Copying Config files to the rhel9 bastion image - redfish
       shell: |
-        virt-copy-in -a {{ item.hypervisor_image_dir }}/{{ supported_os }}-utility.qcow2 /tmp/ifcfg-eth0 /etc/sysconfig/network-scripts/
+        virt-copy-in -a {{ item.hypervisor_image_dir }}/{{ supported_os }}-bastion.qcow2 /tmp/{{ ansible_default_ipv4.interface }}.nmconnection /etc/NetworkManager/system-connections/
       environment:
         LIBGUESTFS_BACKEND: "direct"
       delegate_to: "{{ item.hypervisor_name }}"
@@ -120,3 +126,22 @@
         - ansible_os_family == "RedHat"
         - redfish.enable|bool
 
+    - name: Ensuring correct permissions for network configuration files - redfish
+      shell: |
+        chmod 600 /etc/NetworkManager/system-connections/{{ ansible_default_ipv4.interface }}.nmconnection
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      with_items: "{{ utility_nodes }}"
+      when:
+        - ansible_os_family == "RedHat"
+        - redfish.enable|bool
+
+    - name: Restart NetworkManager to apply the new connection - redfish
+      shell: |
+        systemctl restart NetworkManager
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      with_items: "{{ utility_nodes }}"
+      when:
+        - ansible_os_family == "RedHat"
+        - redfish.enable|bool

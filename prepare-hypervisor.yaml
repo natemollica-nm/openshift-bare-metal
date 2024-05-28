@@ -854,8 +854,8 @@
     - name: clone repo
       shell: |
         cd /root
-        git clone https://github.com/amedeos/ocp4-in-the-jars
-        cd /root/ocp4-in-the-jars
+        git clone https://github.com/amedeos/openshift-bare-metal
+        cd /root/openshift-bare-metal
         git pull
       ignore_errors: True
       when:
@@ -871,15 +871,15 @@
       copy:
         backup: True
         src: bm-ansible-nodes-disconnected.json
-        dest: /root/ocp4-in-the-jars/bm-ansible-nodes.json
+        dest: /root/openshift-bare-metal/bm-ansible-nodes.json
       when:
         - kvmhost.provisioning_bridge_isolated|bool
         - kvmhost.baremetal_bridge_isolated|bool
 
     - name: Overwrite image_location
       shell: |
-        IMAGE=$(egrep '^image:\s+' /root/ocp4-in-the-jars/variables.yaml | sed -E 's/^image:\s+//g')
-        sed -i -E "s@^image_location:\s+.*@image_location: /root/images/${IMAGE}@g" /root/ocp4-in-the-jars/variables.yaml
+        IMAGE=$(egrep '^image:\s+' /root/openshift-bare-metal/variables.yaml | sed -E 's/^image:\s+//g')
+        sed -i -E "s@^image_location:\s+.*@image_location: /root/images/${IMAGE}@g" /root/openshift-bare-metal/variables.yaml
       when:
         - kvmhost.provisioning_bridge_isolated|bool
         - kvmhost.baremetal_bridge_isolated|bool
@@ -893,12 +893,12 @@
     #    - kvmhost.provisioning_bridge_isolated|bool
     #    - kvmhost.baremetal_bridge_isolated|bool
     #  with_items:
-    #    - /root/ocp4-in-the-jars/files/.ssh/id_rsa
-    #    - /root/ocp4-in-the-jars/files/.ssh/id_rsa.pub
+    #    - /root/openshift-bare-metal/files/.ssh/id_rsa
+    #    - /root/openshift-bare-metal/files/.ssh/id_rsa.pub
 
     #- name: Create SSH key
     #  openssh_keypair:
-    #    path: /root/ocp4-in-the-jars/files/.ssh/id_rsa
+    #    path: /root/openshift-bare-metal/files/.ssh/id_rsa
     #    type: rsa
     #  when:
     #    - kvmhost.replace_ssh_key|bool
@@ -907,7 +907,7 @@
 
     - name: Overwrite replace_ddns_duckdns
       shell: |
-        sed -i -E 's/replace_ddns_duckdns:.*/replace_ddns_duckdns: True/g' /root/ocp4-in-the-jars/variables.yaml
+        sed -i -E 's/replace_ddns_duckdns:.*/replace_ddns_duckdns: True/g' /root/openshift-bare-metal/variables.yaml
       when:
         - enable_ddns_duckdns|bool
         - kvmhost.provisioning_bridge_isolated|bool
@@ -928,7 +928,7 @@
           - "# Please connect in ssh to your Hypervisor and run:                                 #"
           - "#                                                                                   #"
           - "# scp <rhel9image.qcow2> <yourhypervisor>:/root/images/                             #"
-          - "# cd /root/ocp4-in-the-jars                                                         #"
+          - "# cd /root/openshift-bare-metal                                                         #"
           - '# ansible-playbook --extra-vars "@custom-variables.yaml" main.yaml                #'
           - "#                                                                                   #"
           - "# if you want to use OpenShift API and/or console outside your Hypervisor,          #"
