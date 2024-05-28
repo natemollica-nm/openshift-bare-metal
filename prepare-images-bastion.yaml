@@ -24,6 +24,19 @@
     - vault-variables.yaml
     - bm-ansible-nodes.json
   tasks:
+    - name: Copying RHEL9 Image from web to images dir
+      get_url:
+        url: "{{ image_location }}"
+        dest: "{{ item.hypervisor_image_dir }}/{{ supported_os }}.qcow2"
+        mode: '0660'
+        owner: root
+        group: root
+      delegate_to: "{{ item.hypervisor_name }}"
+      run_once: True
+      register: image_get_url
+      ignore_errors: True
+      with_items: "{{ bastion_nodes }}"
+
     - name: Copy RHEL9 kvm (qcow2) image
       copy:
         remote_src: True
@@ -34,8 +47,6 @@
         group: root
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
-      when:
-        - image_get_url.failed is defined
       with_items: "{{ bastion_nodes }}"
 
     - name: Create a new Blank Image
