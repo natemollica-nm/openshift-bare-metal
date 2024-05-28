@@ -19,6 +19,7 @@ custom-bm-ansible-nodes.json
 *.DS_Store
 *.idea
 *.secrets
+*.troubleshooting
 networking/cisco.xlsx
 *.qcow2
 vault-variables.yaml
