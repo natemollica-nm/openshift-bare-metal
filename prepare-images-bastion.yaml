@@ -93,6 +93,8 @@
     - variables.yaml
     - vault-variables.yaml
     - bm-ansible-nodes.json
+  vars:
+    uuid: "{{ 1000 | random | to_uuid | upper }}"
   tasks:
     - name: Copy Base Image to create bastion host image
       copy:

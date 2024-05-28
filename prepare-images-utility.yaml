@@ -78,6 +78,8 @@
     - variables.yaml
     - vault-variables.yaml
     - bm-ansible-nodes.json
+  vars:
+    uuid: "{{ 1000 | random | to_uuid | upper }}"
   tasks:
     - name: Copy Base Image to create utility host image
       copy:
@@ -87,7 +89,6 @@
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
       with_items: "{{ utility_nodes }}"
-  
     - name: Create /tmp/{{ ansible_default_ipv4.interface }} for RHEL9 - redfish
       copy:
         dest: /tmp/{{ ansible_default_ipv4.interface }}.nmconnection
