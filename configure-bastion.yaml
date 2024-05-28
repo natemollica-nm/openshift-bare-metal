@@ -14,8 +14,8 @@
           - hypervisor_host
       when:
         - item.state == "present"
+        - item.hypervisor_name != "localhost"
       with_items: "{{ bastion_nodes }}"
-      when: item.hypervisor_name != "localhost"
 
 - name:  Add Bastion VM/Node
   hosts: localhost
