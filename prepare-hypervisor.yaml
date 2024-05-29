@@ -3,6 +3,7 @@
   become: True
   vars_files:
     - variables.yaml
+    - vault-variables.yaml
     - bm-ansible-nodes.json
   tasks:
     - name: Set hostname
@@ -319,21 +320,6 @@
       when:
         - ansible_distribution != "CentOS"
         - ansible_os_family == "RedHat"
-
-    - name: Install virtualbmc
-      dnf:
-        name: python3-virtualbmc
-        state: present
-      when:
-        - not redfish.enable|bool
-
-    - name: Enable virtualbmc service
-      systemd:
-        name: virtualbmc.service
-        state: started
-        enabled: True
-      when:
-        - not redfish.enable|bool
 
     - name: Install python3-sushy-tools
       dnf:

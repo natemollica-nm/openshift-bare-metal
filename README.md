@@ -55,7 +55,10 @@ This particular fork was created and tested on Linux RedHat 9.4 (Plow), and **_d
 In my homelab I used a layer2+layer3 switch from Netgear, its very simple and cheaper managed switch (I paid for Netgear GS108TV3 ~70 bucks), but remember, if you want to use more than one NUC, you will need to connect all your hosts to one switch in order to use the required networks.
 
 #### Only baremetal network
-The Ansible Playbooks, by default, will use only one Linux bridge for OpenShift, which is **bm** for baremetal network (could be native VLAN or tagged by your hypervisor). If you want to use only baremetal network, you have to setup **sushy-tools** on each NUC host in order to simulate redfish emulator.
+The Ansible Playbooks, by default, will use only one Linux bridge for OpenShift, which is **bm** for 
+**_baremetal network_** (could be native VLAN or tagged by your hypervisor). 
+If you want to use only baremetal network, you have to setup **sushy-tools** on each NUC host 
+in order to simulate redfish emulator.
 
 Example configuration for your L2+L3 switch with baremetal network:
 
@@ -209,8 +212,14 @@ otherwise, if you want to deploy the master-2 on the NUC host **pippo02.example.
 
 Install OpenShift Container Platform
 --------------------------------
+Run the `prepare-hypervisor.yaml` playbook:
+
+```bash
+# ansible-playbook -i hosts-kvmhost --extra-vars vault-variables.yaml --extra-vars variables.yaml prepare-hypervisor.yaml
+```
+
 Run the main.yaml playbook passing to it the Ansible vault file:
 
 ```bash
-# ansible-playbook --vault-password-file <YOURVAULTPWFILE> main.yaml
+# ansible-playbook -i hosts-kvmhost --extra-vars vault-variables.yaml --extra-vars variables.yaml main.yaml
 ```
