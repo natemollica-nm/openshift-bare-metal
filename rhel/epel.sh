@@ -15,7 +15,7 @@ dnf config-manager --set-enabled crb
 
 ### Enable the required repositories for RHEL 9
 subscription-manager repos \
-    --enable=rhel-9-for-x86_64-baseos-rpms \
+   --enable=rhel-9-for-x86_64-baseos-rpms \
    --enable=rhel-9-for-x86_64-appstream-rpms \
    --enable=rhel-9-for-x86_64-supplementary-rpms
 

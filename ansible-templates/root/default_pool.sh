@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-#
+export LIBGUESTFS_BACKEND=direct
 VIRSH=$(which virsh)
 
 ${VIRSH} pool-define --file /root/default_pool.xml

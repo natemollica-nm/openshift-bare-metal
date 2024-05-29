@@ -26,43 +26,35 @@
   tasks:
     - name: Copying Template Image to create bastion. RHEL8
       copy:
-        src: "{{ item.hypervisor_image_dir }}/rhel8-bastion.qcow2"
+        src: "{{ item.hypervisor_image_dir }}/rhel9-bastion.qcow2"
         dest: "{{ item.hypervisor_image_dir }}/bastion.qcow2"
         remote_src: True
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
       with_items: "{{ bastion_nodes }}"
 
-    - name: Defining the bastion vm - virtualbmc
-      shell: |
-        virt-install --ram {{ bastion.memory }} --vcpus {{ bastion.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/bastion.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_prov }} --network bridge:{{ bridge_bm }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
-        virsh define /tmp/{{ item.name }}.xml
-      delegate_to: "{{ item.hypervisor_name }}"
-      run_once: True
-      with_items: "{{ bastion_nodes }}"
-      when:
-        - not redfish.enable|bool
-
     - name: Defining the bastion vm - redfish
       shell: |
-        virt-install --ram {{ bastion.memory }} --vcpus {{ bastion.cpu }} --os-variant rhel8.5 --disk path={{ item.hypervisor_image_dir }}/bastion.qcow2,device=disk,bus=virtio,format=qcow2 --noautoconsole --vnc --network bridge:{{ bridge_bm }} --name {{ item.name }} --cpu host-passthrough --dry-run --print-xml > /tmp/{{ item.name }}.xml
+        virt-install \
+            --vnc \
+            --dry-run \
+            --noautoconsole \
+            --os-variant rhel9.4 \
+            --name {{ item.name }} \
+            --cpu host-passthrough \
+            --ram {{ bastion.memory }} \
+            --vcpus {{ bastion.cpu }} \
+            --network bridge:{{ bridge_bm }} \
+            --disk path={{ item.hypervisor_image_dir }}/bastion.qcow2,device=disk,bus=virtio,format=qcow2 \
+            --print-xml >/tmp/{{ item.name }}.xml
         virsh define /tmp/{{ item.name }}.xml
+      environment:
+        LIBGUESTFS_BACKEND: "direct"
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
       with_items: "{{ bastion_nodes }}"
       when:
         - redfish.enable|bool
-
-    # TODO: check ip address available in the hypervisor
-    - name: Create virtualbmc interface
-      shell: |
-        vbmc add "{{ item.name }}" --address "{{ item.vbmc_ip }}" --port "{{ item.vbmc_port }}" --username admin --password "{{ secure_password }}"
-        vbmc start "{{ item.name }}"
-      delegate_to: "{{ item.hypervisor_name }}"
-      run_once: True
-      with_items: "{{ bastion_nodes }}"
-      when:
-        - not redfish.enable|bool
 
     - name: Starting bastion vm
       virt:
@@ -71,18 +63,6 @@
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
       with_items: "{{ bastion_nodes }}"
-
-    - name: Sleeping till ssh on bastion vm is up - virtualbmc
-      wait_for:
-        port: 22
-        host: "{{ item.provisioning_ip }}"
-        delay: 20
-        timeout: 300
-      delegate_to: "{{ item.hypervisor_name }}"
-      run_once: True
-      with_items: "{{ bastion_nodes }}"
-      when:
-        - not redfish.enable|bool
 
     - name: Sleeping till ssh on bastion vm is up - redfish
       wait_for:
@@ -128,19 +108,6 @@
       delegate_to: "{{ item.hypervisor_name }}"
       run_once: True
       with_items: "{{ bastion_nodes }}"
-
-    - name: Update /etc/hosts with bastion entry - virtualbmc
-      lineinfile:
-        path: /etc/hosts
-        backup: True
-        regexp: "{{ item.name }}.{{ domain }}"
-        line: "{{ item.provisioning_ip }}\t{{ item.name }}.{{ domain }}\t{{ item.name }}"
-        state: present
-      delegate_to: "{{ item.hypervisor_name }}"
-      run_once: True
-      with_items: "{{ bastion_nodes }}"
-      when:
-        - not redfish.enable|bool
 
     - name: Update /etc/hosts with bastion entry - redfish
       lineinfile:
@@ -271,13 +238,21 @@
 
     - name: Set base repository for the bastion
       shell: |
-        subscription-manager repos --disable='*' --enable=rhel-8-for-x86_64-baseos-rpms --enable=rhel-8-for-x86_64-appstream-rpms --enable=ansible-2.9-for-rhel-8-x86_64-rpms
+        subscription-manager repos \
+            --disable='*' \
+            --enable=rhel-9-for-x86_64-baseos-rpms \
+            --enable=rhel-9-for-x86_64-appstream-rpms \
+            --enable=rhel-9-for-x86_64-supplementary-rpms \
+            --enable codeready-builder-for-rhel-9-"$(arch)"-rpms
+        dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 
-    # maybe the subscription id shouln't has odf subs
-    - name: Enable odf repository for the bastion
+    - name: Configure openstack-ansible-core dnf.conf exclude
       shell: |
-        subscription-manager repos --enable=rh-odf-4-for-rhel-8-x86_64-rpms
-      ignore_errors: True
+        if grep -q "^exclude=" /etc/dnf/dnf.conf; then
+          sed -i "/^exclude=/ s/$/openstack-ansible-core/" /etc/dnf/dnf.conf
+        else
+          echo "exclude=openstack-ansible-core" | sudo tee -a /etc/dnf/dnf.conf
+        fi
 
     - name: Clean yum cache
       command: yum clean all
@@ -303,7 +278,7 @@
           - iptables
           - bash-completion
           - tree
-          - redhat-lsb-core
+          - lsb_release
           - ipmitool
           - nmap
           - ansible

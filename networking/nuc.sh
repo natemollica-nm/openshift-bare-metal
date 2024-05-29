@@ -23,8 +23,8 @@ configure_local_network_interface() {
   fi
   
   print_msg "bare-metal-bridge: Establishing static local networking on '$ETHERNET_INTERFACE':" \
-    "Host: $HOSTNAME" \
-    "Local LAN IP: $local_lan_ip"
+      "Host: $HOSTNAME" \
+      "Local LAN IP: $local_lan_ip"
 
   # Configure local subnet info
   sudo nmcli connection modify "$ETHERNET_INTERFACE" ipv4.addresses "${local_lan_ip}"/24 ipv4.gateway 192.168.0.1 ipv4.method auto >/dev/null 2>&1 || {
@@ -45,10 +45,10 @@ build_bare_metal_bridge() {
   fi
 
   print_msg "bare-metal-bridge: Creating '$VLAN_INTERFACE' (VLAN interface) and '$BRIDGE_INTERFACE' (bridge interface):" \
-    "Host: $HOSTNAME" \
-    "VLAN 2003 Interface: $VLAN_INTERFACE" \
-    "Bridge Interface: $BRIDGE_INTERFACE" \
-    "Baremetal IP: $baremetal_ip"
+      "Host: $HOSTNAME" \
+      "VLAN 2003 Interface: $VLAN_INTERFACE" \
+      "Bridge Interface: $BRIDGE_INTERFACE" \
+      "Baremetal IP: $baremetal_ip"
   # Create VLAN 2003 interface
   sudo nmcli connection add type vlan con-name "$VLAN_INTERFACE" ifname baremetal dev "$ETHERNET_INTERFACE" id 2003 >/dev/null 2>&1 || {
     err "bare-metal-bridge: Failed to create VLAN 2003 interface 'baremetal' on '$ETHERNET_INTERFACE'!"

@@ -47,11 +47,9 @@ This lab was tested running [GEEKOM XT12 Pro Mini PCs](https://www.amazon.com/gp
 - Storage - 1TB PCIe4.0 SSD
 - Networking - 2.5GB Ethernet, WiFi 6E
 
-there is no constraint on which Linux distribution to use, for example, I use Gentoo, but you can use RHEL 8, CentOS Stream 8, Ubuntu, Arch... for example to set up a similar project on a Cloud dedicated CentOS Stream 8 server I used this Ansible playbook:
+This particular fork was created and tested on Linux RedHat 9.4 (Plow), and **_does_** have constraints and limitations to this distro.
 
 [prepare-hypervisor.yaml](prepare-hypervisor.yaml)
-
-if you use Gentoo, like me, you can simply install the required packages from the Portage and virtualbmc or sushy-tools, from my overlay "amedeos"
 
 ### Layer2 and Layer3
 In my homelab I used a layer2+layer3 switch from Netgear, its very simple and cheaper managed switch (I paid for Netgear GS108TV3 ~70 bucks), but remember, if you want to use more than one NUC, you will need to connect all your hosts to one switch in order to use the required networks.
@@ -125,14 +123,17 @@ OpenShift Container Platform requires various Virtual Machines, below the list o
 |      master-2       |   master    |   4    |   16G    |     1x150G      |
 |      worker-0       |   worker    |   8    |   32G    | 1x150G + 1x400G |
 |      worker-1       |   worker    |   8    |   32G    | 1x150G + 1x400G |
+|                     | **Total:**  | **36** | **130G** |    **1.75T**    |
 | worker-2 (optional) |   worker    |   8    |   32G    | 1x150G + 1x400G |
 |                     |             |        |          |                 |
 |                     | **Total:**  | **44** | **162G** |    **2.3T**     |
 
 The most critical resource is the vRAM, because all hosts, during the installation will be memory consuming; instead all disks will be created in thin provisioning and for this reason a clean deploy will take up to 10-15% provisioned space.
 
-### Red Hat Enterprise Linux 8.6 qcow2
-You need to download from Red Hat customer portal the RHEL 8.6 qcow2 file and make it available for download in the NUC that will be the KVM host for the bastion and utility host.
+### Red Hat Enterprise Linux 9.4 qcow2
+
+You need to download from Red Hat customer portal the RHEL 9.4 qcow2 file and make it available for download in any NUC 
+that will host VMs as a KVM host (required for the bastion and utility VM hosts).
 
 For example, from a running and entitled RHEL host you can run:
 ```bash
@@ -151,7 +152,7 @@ Open **variables.yaml** and **vault-variables.yaml** files and edit all variable
 | rh_subcription_user     |   Your Red Hat Customer Portal username    |
 | rh_subcription_password |   Your Red Hat Customer Portal password    |
 | rh_subcription_pool     | Your Red Hat Subscription Pool ID for RHEL |
-| image_location          |          RHEL 8.6 qcow2 URL/path           |
+| image_location          |          RHEL 9.4 qcow2 URL/path           |
 | ssh_pub                 |            Your ssh public key             |
 | ssh_key                 |            Your ssh private key            |
 | duckdns_token           |   Your duckdns.org token for Dynamic DNS   |

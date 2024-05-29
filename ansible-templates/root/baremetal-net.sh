@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 {% if redfish.enable == True  %}
-INTERFACE="eth0"
+INTERFACE={{ ansible_default_ipv4.interface }}
 {% else %}
 INTERFACE="eth1"
 {% endif %}

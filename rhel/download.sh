@@ -3,7 +3,7 @@
 eval "$(cat sbin/logging.sh)"
 eval "$(cat sbin/formatting.env)"
 
-export RHEL_DOWNLOAD_URL=https://developers.redhat.com/content-gateway/file/rhel/Red_Hat_Enterprise_Linux_8.9.0/rhel-8.9-x86_64-dvd.iso
+export RHEL_DOWNLOAD_URL=https://access.cdn.redhat.com/content/origin/files/sha256/d3/d362e72518a2d7415d850b8177c814f6fd87f42ca1640bda17e98855e1d6baad/rhel-9.4-x86_64-kvm.qcow2
 export OFFLINE_API_TOKEN
 export AUTHORIZATION_TOKEN
 
