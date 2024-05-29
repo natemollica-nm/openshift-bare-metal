@@ -24,7 +24,7 @@
     - vault-variables.yaml
     - bm-ansible-nodes.json
   tasks:
-    - name: Copying RHEL9 Image from web to images dir
+    - name: Copying RHEL9 Image (Web *==> images/) - Bastion
       get_url:
         url: "{{ image_location }}"
         dest: "{{ item.hypervisor_image_dir }}/{{ supported_os }}.qcow2"
@@ -37,7 +37,7 @@
       ignore_errors: True
       with_items: "{{ bastion_nodes }}"
 
-    - name: Copy RHEL9 kvm (qcow2) image
+    - name: Copy RHEL9 kvm (qcow2) image - Bastion
       copy:
         remote_src: True
         src: "{{ image_location }}"

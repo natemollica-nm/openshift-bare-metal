@@ -215,11 +215,19 @@ Install OpenShift Container Platform
 Run the `prepare-hypervisor.yaml` playbook:
 
 ```bash
-# ansible-playbook -i hosts-kvmhost --extra-vars vault-variables.yaml --extra-vars variables.yaml prepare-hypervisor.yaml
+# ansible-playbook -i hosts-kvmhost --extra-vars "@vault-variables.yaml" --extra-vars "@variables.yaml" prepare-hypervisor.yaml
 ```
 
 Run the main.yaml playbook passing to it the Ansible vault file:
 
 ```bash
 # ansible-playbook -i hosts-kvmhost --extra-vars vault-variables.yaml --extra-vars variables.yaml main.yaml
+```
+
+
+Cleanup
+-------
+
+```bash
+# ansible-playbook --extra-vars "@vault-variables.yaml" --extra-vars "@variables.yaml" cleanup.yaml
 ```

@@ -258,7 +258,7 @@
             --enable=rhel-9-for-x86_64-appstream-rpms \
             --enable=rhel-9-for-x86_64-supplementary-rpms \
             --enable codeready-builder-for-rhel-9-"$(arch)"-rpms
-        dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+        dnf install --yes https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 
     - name: Configure openstack-ansible-core dnf.conf exclude
       shell: |
@@ -267,6 +267,8 @@
         else
           echo "exclude=openstack-ansible-core" | sudo tee -a /etc/dnf/dnf.conf
         fi
+      when:
+        - redfish.enable|bool
 
     - name: Clean yum cache
       command: yum clean all

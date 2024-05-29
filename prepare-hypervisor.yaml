@@ -281,6 +281,7 @@
           - virt-install
           - libguestfs-tools
           - libguestfs-xfs
+          - libvirt-nss
           - virt-viewer
           - net-tools
           - mlocate
@@ -290,6 +291,13 @@
           - ipmitool
           - tree
         state: present
+
+    - name: Enabling libvirt-nss on KVM Host (libvirt_guest)
+      shell: |
+        sed -i '/^hosts:/ s/$/ libvirt_guest/' /etc/nsswitch.conf
+      when:
+        - ansible_distribution != "CentOS"
+        - ansible_os_family == "RedHat"
 
     - name: Install keepalived
       dnf:

@@ -24,7 +24,20 @@
     - vault-variables.yaml
     - bm-ansible-nodes.json
   tasks:
-    - name: Copy RHEL-9 image
+    - name: Copying RHEL9 Image (Web *==> images/) - Utility
+      get_url:
+        url: "{{ image_location }}"
+        dest: "{{ item.hypervisor_image_dir }}/{{ supported_os }}.qcow2"
+        mode: '0660'
+        owner: root
+        group: root
+      delegate_to: "{{ item.hypervisor_name }}"
+      register: image_get_url
+      ignore_errors: True
+      run_once: True
+      with_items: "{{ utility_nodes }}"
+
+    - name: Copy RHEL9 kvm (qcow2) image - Utility
       copy:
         remote_src: True
         src: "{{ image_location }}"
